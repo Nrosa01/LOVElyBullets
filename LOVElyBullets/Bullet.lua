@@ -7,7 +7,8 @@
 ---@field private _updateables {on_update: fun(bullet:Rioni.LOVElyBullets.Bullet, dt:number)}[] A list of components that have an on_update function
 ---@field private _drawables {on_draw: fun(bullet:Rioni.LOVElyBullets.Bullet)}[] A list of components that have a on_draw function
 ---@field private _disablateables {on_disabled: fun(bullet:Rioni.LOVElyBullets.Bullet, dt: number)}[] A list of components that have a on_disabled function
----@field private _despawneable {on_despawn: fun(bullet:Rioni.LOVElyBullets.Bullet)}[] A list of components that have a on_disabled function
+---@field private _despawneables {on_despawn: fun(bullet:Rioni.LOVElyBullets.Bullet)}[] A list of components that have a on_disabled function
+---@field private _spawnables {on_spawn: fun(bullet: Rioni.LOVElyBullets.Bullet)}[] A list of components that have a on_spawn function
 ---@field active boolean If true, the bullet will be updated, but it's drawn regardless of this value. Bullet is only not drawn if it's pooled
 ---@field private _pooled boolean If true, the bullet is not drawn and is not updated. It's in the pool for later reuse
 ---@field on_spawn fun(bullet: Rioni.LOVElyBullets.Bullet) A function that is called when the bullet is spawned
@@ -18,7 +19,7 @@
 local Bullet = {}
 Bullet.__index = Bullet
 
----@alias Rioni.LOVElyBullets.Component {on_update: fun(bullet:Rioni.LOVElyBullets.Bullet, dt:number)?, on_draw: fun(bullet:Rioni.LOVElyBullets.Bullet)?, on_disabled: fun(bullet:Rioni.LOVElyBullets.Bullet, dt:number)?, on_despawn: fun(bullet: Rioni.LOVElyBullets.Bullet)?}
+---@alias Rioni.LOVElyBullets.Component {on_update: fun(bullet:Rioni.LOVElyBullets.Bullet, dt:number)?, on_draw: fun(bullet:Rioni.LOVElyBullets.Bullet)?, on_disabled: fun(bullet:Rioni.LOVElyBullets.Bullet, dt:number)?, on_despawn: fun(bullet: Rioni.LOVElyBullets.Bullet)?, on_spawn: fun(bullet: Rioni.LOVElyBullets.Component)?}
 
 ---@alias Rioni.LOVElyBullets.Bullet.InitializationData {position:Rioni.Math.Point, spawn_point:Rioni.Math.Point?, relative:boolean?, components:Rioni.LOVElyBullets.Component[], active:boolean?, on_spawn:fun(bullet: Rioni.LOVElyBullets.Bullet)?, on_despawn:fun(bullet: Rioni.LOVElyBullets.Bullet)?}
 
@@ -70,10 +71,17 @@ function Bullet:reset(data)
         end
     end
 
-    self._despawneable = {}
+    self._despawneables = {}
     for _, comp in ipairs(data.components) do
         if comp.on_despawn then
-            table.insert(self._despawneable, comp)
+            table.insert(self._despawneables, comp)
+        end
+    end
+
+    self._spawnables = {}
+    for _, comp in ipairs(data.components) do
+        if comp.on_spawn then
+            table.insert(self._spawnables, comp)
         end
     end
 
@@ -108,13 +116,18 @@ end
 
 function Bullet:on_spawn()
     self._pooled = false
+
+    for _, comp in ipairs(self._spawnables) do
+        comp.on_spawn(self)
+    end
+
     self.on_spawn_callback(self)
 end
 
 function Bullet:on_despawn()
     self._pooled = true
 
-    for _, comp in ipairs(self._despawneable) do
+    for _, comp in ipairs(self._despawneables) do
         comp.on_despawn(self)
     end
 

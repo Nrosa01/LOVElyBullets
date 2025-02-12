@@ -35,6 +35,8 @@ graph
     Component --> |"Implements"| E[on_update?]
     Component --> |"Implements"| F[on_draw?]
     Component --> |"Implements"| I[on_disabled?]
+    Component --> |"Implements"| J[on_spawn?]
+    Component --> |"Implements"| K[on_despawn?]
 ```
 
 First you create a generator that has a coroutine function. That coroutine defines where and when to spawn bullets. Bullets are optionally activated on creation inside the generation function, or you can activate them after a while. You can spawn the bullets of the next formation after or before the bullets of the previous ones are activated. Bullets draw function is called always no matter its active state. You could perfectly make them invisible in that time. I'm not sure how to explain this properly but this system is designed to handle or combinations and timings you can think of.
@@ -96,7 +98,7 @@ This pattern generates a circular formation of bullets and then waits before sta
 
 But... Where do Components come from? Well, you have to provide it yourself. I don't provide any component but you can check my implementation in the [components.lua](./components.lua) file.
 
-Components are object tha can have 3 functions: `on_update`, `on_draw` and `on_disabled`. `on_draw` is called always (unless the bullet is pooled), `on_update` is called when the bullet is active and `on_disabled` is called when the bullet is disabled.
+Components are object tha can have 5 functions: `on_update`, `on_draw`, `on_disabled`, `on_spawn`, `on_despawn`. `on_draw` is called always (unless the bullet is pooled), `on_update` is called when the bullet is active and `on_disabled` is called when the bullet is disabled. Spawn is called when the bullet is spawned and despawn when the bullet is despawned. You can use these functions to implement your own logic. If you inject fields in the bullet, you should clear them in the on_spawn, otherwise, the remaining update functions of that frame might try to access them.
 
 Here you have a simple example of a component that makes a bullet move in a direction and also draws it as a circle.
 
@@ -189,8 +191,8 @@ Represents a bullet in the system.
 - `Bullet.new(data, system)`: Creates a new bullet instance. You shouldn't call this, use BulletSystem:create_bullet instead.
 - `Bullet:update(dt)`: Updates the bullet and its components. If the bullet is not active, it will call the on_disabled method of its components.
 - `Bullet:draw()`: Draws the bullet.
-- `Bullet:on_spawn()`: If you hooked a callback data, it will be triggered everytime you spawn a bullet
-- `Bullet:on_despawn()`: If you hooked a callback data, it will be triggered everytime a bullet is despawned
+- `Bullet:on_spawn()`: If you hooked a callback data, it will be triggered everytime you spawn a bullet. Also calls the on_spawn method of its components.
+- `Bullet:on_despawn()`: If you hooked a callback data, it will be triggered everytime a bullet is despawned. Also calls the on_despawn method of its components.
 - `Bullet:move_by(x, y)`: Moves the bullet by the specified amount.
 - `Bullet:move_to(x, y)`: Moves the bullet to the specified position.
 
