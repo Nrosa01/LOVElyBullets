@@ -2,6 +2,8 @@
 
 This document describes the operation of the bullet system and generators in LÖVE 2D.
 
+![](bullets_system_demo.gif)
+
 ## Table of Contents
 - [LÖVEly Bullets System Documentation](#lövely-bullets-system-documentation)
   - [Table of Contents](#table-of-contents)
